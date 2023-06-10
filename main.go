@@ -69,7 +69,9 @@ func main(){
 				
 				for _, dir := range list {
 					dir = regex.Comp(`[\r\n\t ]+`).RepStrRef(&dir, []byte{})
-					scanDirList = append(scanDirList, string(dir[len([]byte(homeDir))+1:]))
+					if !bytes.Contains(dir, []byte("/tmp/")) {
+						scanDirList = append(scanDirList, string(dir[len([]byte(homeDir))+1:]))
+					}
 				}
 			}
 		}()
@@ -133,7 +135,7 @@ func main(){
 
 			// prevent removed or recently changed files from staying at the begining of the queue
 			now := uint(time.Now().UnixMilli())
-			if modified, ok := hasFiles.Get(file); !ok || now - modified > 1000 {
+			if modified, ok := hasFiles.Get(file); !ok || now - modified < 1000 {
 				continue
 			}
 			hasFiles.Del(file)
