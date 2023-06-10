@@ -17,6 +17,7 @@ import (
 
 func main(){
 	newFiles := haxmap.New[string, uint]()
+	hasFiles := haxmap.New[string, uint]()
 	lastNotify := uint(0)
 	notifyDelay := uint(3000)
 
@@ -92,10 +93,12 @@ func main(){
 
 	watcher.OnFileChange = func(path, op string) {
 		newFiles.Set(path, uint(time.Now().UnixMilli()))
+		hasFiles.Set(path, uint(time.Now().UnixMilli()))
 	}
 
 	watcher.OnRemove = func(path, op string) (removeWatcher bool) {
 		newFiles.Del(path)
+		hasFiles.Del(path)
 		return true
 	}
 
@@ -127,6 +130,13 @@ func main(){
 			if file == "" {
 				break
 			}
+
+			// prevent removed or recently changed files from staying at the begining of the queue
+			now := uint(time.Now().UnixMilli())
+			if modified, ok := hasFiles.Get(file); !ok || now - modified > 1000 {
+				continue
+			}
+			hasFiles.Del(file)
 
 			cmd := exec.Command(`sudo`, `nice`, `-n`, `15`, `clamscan`, `&&`, `sudo`, `clamscan`, `-r`, `--bell`, `--move=/VirusScan/quarantine`, `--exclude-dir=/VirusScan/quarantine`, file)
 
