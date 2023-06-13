@@ -16,6 +16,12 @@ import (
 )
 
 func main(){
+	rootDir, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	rootDir = string(regex.Comp(`[\\\/][\w_\-\.]+$`).RepStr([]byte(rootDir), []byte{}))
+
 	newFiles := haxmap.New[string, uint]()
 	hasFiles := haxmap.New[string, uint]()
 	lastNotify := uint(0)
@@ -174,13 +180,13 @@ func main(){
 								now := uint(time.Now().UnixMilli())
 								if now - lastNotify > notifyDelay {
 									lastNotify = now
-									exec.Command(`notify-send`, `-i`, `/etc/aspiesoft-clamav-scanner/icon-green.png`, `-t`, `3`, `File Is Safe`, file).Run()
+									exec.Command(`notify-send`, `-i`, rootDir+`/assets/green.png`, `-t`, `3`, `File Is Safe`, file).Run()
 								}
 							}else if inf != 0 {
 								now := uint(time.Now().UnixMilli())
 								if now - lastNotify > notifyDelay {
 									lastNotify = now
-									exec.Command(`notify-send`, `-i`, `/etc/aspiesoft-clamav-scanner/icon-red.png`, `-t`, `3`, `Warning: File Has Been Moved To Quarantine`, file).Run()
+									exec.Command(`notify-send`, `-i`, rootDir+`/assets/red.png`, `-t`, `3`, `Warning: File Has Been Moved To Quarantine`, file).Run()
 								}
 							}
 
@@ -194,7 +200,7 @@ func main(){
 				now := uint(time.Now().UnixMilli())
 				if now - lastNotify > notifyDelay {
 					lastNotify = now
-					exec.Command(`notify-send`, `-i`, `/etc/aspiesoft-clamav-scanner/icon.png`, `-t`, `3`, `Started Scanning File`, file).Run()
+					exec.Command(`notify-send`, `-i`, rootDir+`/assets/blue.png`, `-t`, `3`, `Started Scanning File`, file).Run()
 				}
 			}
 
@@ -206,7 +212,7 @@ func main(){
 					now := uint(time.Now().UnixMilli())
 					if now - lastNotify > notifyDelay {
 						lastNotify = now
-						exec.Command(`notify-send`, `-i`, `/etc/aspiesoft-clamav-scanner/icon.png`, `-t`, `3`, `Error: Failed To Scan File`, file).Run()
+						exec.Command(`notify-send`, `-i`, rootDir+`/assets/blue.png`, `-t`, `3`, `Error: Failed To Scan File`, file).Run()
 					}
 				}
 			}
