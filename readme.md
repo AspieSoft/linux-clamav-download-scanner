@@ -18,4 +18,11 @@ Currently, this module only uses the active users home directories, and does not
 
 # optional: add additional directories to watch for downloads
 ./linux-clamav-download-scanner MyDir1 MyDir2 MyDir...
+
+# recommended to reduce memory usage
+# the loop will restore the process incase it crashes from the memory limit
+while true; do
+  GOMEMLIMIT="$((1024 * 1024 * 200))" ./linux-clamav-download-scanner
+  sleep 1
+done
 ```
