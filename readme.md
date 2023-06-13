@@ -13,6 +13,12 @@ Currently, this module only uses the active users home directories, and does not
 ## Installation
 
 ```shell script
+git clone https://github.com/AspieSoft/linux-clamav-download-scanner.git
+```
+
+## Setup
+
+```shell script
 # add this file to your startup script
 ./linux-clamav-download-scanner
 
