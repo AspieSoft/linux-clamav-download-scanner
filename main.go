@@ -146,7 +146,7 @@ func main(){
 			}
 			hasFiles.Del(file)
 
-			cmd := exec.Command(`sudo`, `nice`, `-n`, `15`, `clamscan`, `&&`, `sudo`, `clamscan`, `-r`, `--bell`, `--move=/VirusScan/quarantine`, `--exclude-dir=/VirusScan/quarantine`, file)
+			cmd := exec.Command(`sudo`, `nice`, `-n`, `15`, `clamscan`, `-r`, `--bell`, `--move=/VirusScan/quarantine`, `--exclude-dir=/VirusScan/quarantine`, file)
 
 			success := false
 
