@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AspieSoft/go-regex/v4"
+	"github.com/AspieSoft/go-regex/v5/re2-opt"
 	"github.com/AspieSoft/goutil/v5"
 	"github.com/alphadose/haxmap"
 )
@@ -74,7 +74,7 @@ func main(){
 				}
 				
 				for _, dir := range list {
-					dir = regex.Comp(`[\r\n\t ]+`).RepStrRef(&dir, []byte{})
+					dir = regex.Comp(`[\r\n\t ]+`).RepStr(dir, []byte{})
 					if !bytes.Contains(dir, []byte("/tmp/")) {
 						scanDirList = append(scanDirList, string(dir[len([]byte(homeDir))+1:]))
 					}
@@ -160,14 +160,14 @@ func main(){
 							break
 						}
 
-						if !onSummary && regex.Comp(`(?i)-+\s*scan\s+summ?[ae]ry\s*-+`).MatchRef(&b) {
+						if !onSummary && regex.Comp(`(?i)-+\s*scan\s+summ?[ae]ry\s*-+`).Match(b) {
 							onSummary = true
 							success = true
 						}
 
-						if onSummary && regex.Comp(`(?i)infected\s+files:?\s*([0-9]+)`).MatchRef(&b) {
+						if onSummary && regex.Comp(`(?i)infected\s+files:?\s*([0-9]+)`).Match(b) {
 							inf := 0
-							regex.Comp(`(?i)infected\s+files:?\s*([0-9]+)`).RepFuncRef(&b, func(data func(int) []byte) []byte {
+							regex.Comp(`(?i)infected\s+files:?\s*([0-9]+)`).RepFunc(b, func(data func(int) []byte) []byte {
 								if i, err := strconv.Atoi(string(data(1))); err == nil && i > inf {
 									inf = i
 								}
