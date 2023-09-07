@@ -6,9 +6,9 @@
 
 Automatically scan your linux home directory when you download something new.
 
-By default, this module only scans common directoried (Downloads, Desktop, etc.) and searches for extension directories like your chrome extensions.
+By default, this module only scans common directories (Downloads, Desktop, etc.) and searches for extension directories like your chrome extensions.
 I may add additional directories in future updates.
-Currently, this module only uses the active users home directories, and does not touch the root directory.
+Currently, this module only uses the active users home directory, and does not touch the root directory.
 
 ## Installation
 
