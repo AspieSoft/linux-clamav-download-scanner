@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/AspieSoft/go-regex-re2"
-	"github.com/AspieSoft/goutil/v5"
+	"github.com/AspieSoft/goutil/fs"
 	"github.com/alphadose/haxmap"
 )
 
@@ -85,13 +85,13 @@ func main(){
 	cmd.Run()
 
 
-	watcher := goutil.FS.FileWatcher()
+	watcher := fs.Watcher()
 	defer watcher.CloseWatcher("*")
 
 	var downloadDir string
 
 	for _, dir := range scanDirList {
-		if path, err := goutil.FS.JoinPath(homeDir, dir); err == nil {
+		if path, err := fs.JoinPath(homeDir, dir); err == nil {
 			watcher.WatchDir(path)
 			if downloadDir == "" && dir == "Downloads" {
 				downloadDir = path
