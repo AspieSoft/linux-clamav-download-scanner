@@ -2,28 +2,47 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
-	"github.com/AspieSoft/go-regex-re2"
-	"github.com/AspieSoft/goutil/fs"
-	"github.com/alphadose/haxmap"
+	"github.com/AspieSoft/go-regex-re2/v2"
+	"github.com/AspieSoft/goutil/bash"
+	"github.com/AspieSoft/goutil/fs/v2"
 )
 
 func main(){
-	rootDir, err := os.Executable()
+	rootDir, err := filepath.Abs(".")
 	if err != nil {
 		log.Fatal(err)
 	}
-	rootDir = string(regex.Comp(`[\\\/][\w_\-\.]+$`).RepStr([]byte(rootDir), []byte{}))
 
-	newFiles := haxmap.New[string, uint]()
-	hasFiles := haxmap.New[string, uint]()
+	user := os.Getenv("USER")
+	var userDBUS string
+	if os.Geteuid() == 0 {
+		user = os.Getenv("SUDO_USER")
+		if user == "" {
+			user = "root"
+		}
+
+		if out, err := bash.Run([]string{`runuser`, `-l`, user, `-c`, `echo $UID`}, "", nil); err == nil && len(out) != 0 {
+			out = bytes.Trim(out, "\r\n ")
+			if len(out) != 0 {
+				userDBUS = `unix:path=/run/user/`+string(out)+`/bus`
+			}
+		}
+	}
+
+	newFiles := map[string]uint{}
+	hasFiles := map[string]uint{}
+	var mu sync.Mutex
 	lastNotify := uint(0)
 	notifyDelay := uint(3000)
 
@@ -36,10 +55,17 @@ func main(){
 		"Music",
 	}
 
-
 	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
+	if err != nil || !strings.HasPrefix(homeDir, "/home") {
+		if os.Geteuid() != 0 {
+			log.Fatal(errors.New("error: failed to get user home directory!"))
+		}
+
+		if out, err := bash.RunRaw(`getent passwd $SUDO_USER | cut -d: -f6`, "", nil); err == nil {
+			homeDir = string(bytes.Trim(out, "\r\n "))
+		}else{
+			log.Fatal(errors.New("error: failed to get user home directory!"))
+		}
 	}
 
 	for _, arg := range os.Args[1:] {
@@ -51,38 +77,29 @@ func main(){
 
 	// create quarantine directory if it does not exist
 	if _, err := os.Stat("/VirusScan/quarantine"); err == nil || !strings.HasSuffix(err.Error(), "permission denied") {
-		exec.Command(`sudo`, `mkdir`, `-p`, `/VirusScan/quarantine`, `&&`, `sudo`, `chmod`, `0664`, `/VirusScan`, `&&`, `sudo`, `chmod`, `2660`, `/VirusScan/quarantine`, `&&`, `sudo`, `chmod`, `-R`, `2660`, `/VirusScan/quarantine`).Run()
+		os.MkdirAll("/VirusScan", 0644)
+		os.MkdirAll("/VirusScan/quarantine", 2660)
 	}
 
 
-	cmd := exec.Command(`find`, homeDir+"/.config", `-type`, `d`, `-name`, `*xtensions`)
-	if stdout, err := cmd.StdoutPipe(); err == nil {
-		go func(){
-			for {
-				b := make([]byte, 1024)
-				_, err := stdout.Read(b)
-				if err != nil {
-					break
-				}
-
-				list := bytes.Split(b, []byte{'\n'})
-				if len(list) == 0 {
-					continue
-				}
-				if list[len(list)-1][0] == 0 {
-					list = list[:len(list)-1]
-				}
-				
-				for _, dir := range list {
-					dir = regex.Comp(`[\r\n\t ]+`).RepStr(dir, []byte{})
-					if !bytes.Contains(dir, []byte("/tmp/")) {
-						scanDirList = append(scanDirList, string(dir[len([]byte(homeDir))+1:]))
-					}
-				}
+	// add browser extensions directories to scanDirList
+	if out, err := bash.Run([]string{`find`, homeDir, `-type`, `d`, `-name`, `*xtensions`}, "", nil); err == nil {
+		for _, dir := range bytes.Split(out, []byte{'\n'}) {
+			dir = bytes.Trim(dir, "\r\n ")
+			if len(dir) != 0 {
+				scanDirList = append(scanDirList, string(dir[len([]byte(homeDir))+1:]))
 			}
-		}()
+		}
 	}
-	cmd.Run()
+
+	if out, err := bash.Run([]string{`find`, homeDir, `-type`, `d`, `-name`, `*xtension`}, "", nil); err == nil {
+		for _, dir := range bytes.Split(out, []byte{'\n'}) {
+			dir = bytes.Trim(dir, "\r\n ")
+			if len(dir) != 0 {
+				scanDirList = append(scanDirList, string(dir[len([]byte(homeDir))+1:]))
+			}
+		}
+	}
 
 
 	watcher := fs.Watcher()
@@ -100,13 +117,17 @@ func main(){
 	}
 
 	watcher.OnFileChange = func(path, op string) {
-		newFiles.Set(path, uint(time.Now().UnixMilli()))
-		hasFiles.Set(path, uint(time.Now().UnixMilli()))
+		mu.Lock()
+		newFiles[path] = uint(time.Now().UnixMilli())
+		hasFiles[path] = uint(time.Now().UnixMilli())
+		mu.Unlock()
 	}
 
 	watcher.OnRemove = func(path, op string) (removeWatcher bool) {
-		newFiles.Del(path)
-		hasFiles.Del(path)
+		mu.Lock()
+		delete(newFiles, path)
+		delete(hasFiles, path)
+		mu.Unlock()
 		return true
 	}
 
@@ -120,14 +141,15 @@ func main(){
 				break
 			}
 
+			mu.Lock()
 			now := uint(time.Now().UnixMilli())
-			newFiles.ForEach(func(path string, modified uint) bool {
+			for path, modified := range newFiles {
 				if now - modified > 1000 {
 					scanFile <- path
-					newFiles.Del(path)
+					delete(newFiles, path)
 				}
-				return true
-			})
+			}
+			mu.Unlock()
 		}
 	}()
 
@@ -139,14 +161,19 @@ func main(){
 				break
 			}
 
-			// prevent removed or recently changed files from staying at the begining of the queue
+			// prevent removed or recently changed files from staying at the beginning of the queue
+			mu.Lock()
 			now := uint(time.Now().UnixMilli())
-			if modified, ok := hasFiles.Get(file); !ok || now - modified < 1000 {
+			if modified, ok := hasFiles[file]; !ok || now - modified < 1000 {
+				mu.Unlock()
 				continue
 			}
-			hasFiles.Del(file)
+			delete(hasFiles, file)
+			mu.Unlock()
 
-			cmd := exec.Command(`sudo`, `nice`, `-n`, `15`, `clamscan`, `-r`, `--bell`, `--move=/VirusScan/quarantine`, `--exclude-dir=/VirusScan/quarantine`, file)
+			cmd := exec.Command(`nice`, `-n`, `15`, `clamscan`, `-r`, `--bell`, `--move=/VirusScan/quarantine`, `--exclude-dir=/VirusScan/quarantine`, file)
+			cmd.Dir = homeDir
+			cmd.Env = os.Environ()
 
 			success := false
 
@@ -180,13 +207,21 @@ func main(){
 								now := uint(time.Now().UnixMilli())
 								if now - lastNotify > notifyDelay {
 									lastNotify = now
-									exec.Command(`notify-send`, `-i`, rootDir+`/assets/green.png`, `-t`, `3`, `File Is Safe`, file).Run()
+									if os.Geteuid() == 0 {
+										bash.Run([]string{`pkexec`, `--user`, user, `./notify.sh`, userDBUS, `assets/green.png`, `File Is Safe`, file}, rootDir, nil)
+									}else{
+										bash.Run([]string{`notify-send`, `-i`, `assets/green.png`, `-t`, `3`, `File Is Safe`, file}, rootDir, nil)
+									}
 								}
 							}else if inf != 0 {
 								now := uint(time.Now().UnixMilli())
 								if now - lastNotify > notifyDelay {
 									lastNotify = now
-									exec.Command(`notify-send`, `-i`, rootDir+`/assets/red.png`, `-t`, `3`, `Warning: File Has Been Moved To Quarantine`, file).Run()
+									if os.Geteuid() == 0 {
+										bash.Run([]string{`pkexec`, `--user`, user, `./notify.sh`, userDBUS, `assets/red.png`, `Warning: File Has Been Moved To Quarantine`, file}, rootDir, nil)
+									}else{
+										bash.Run([]string{`notify-send`, `-i`, `assets/red.png`, `-t`, `3`, `Warning: File Has Been Moved To Quarantine`, file}, rootDir, nil)
+									}
 								}
 							}
 
@@ -196,11 +231,15 @@ func main(){
 				}()
 			}
 
-			if downloadDir != "" && strings.HasPrefix(file, downloadDir) {
+			if downloadDir != "" && strings.HasPrefix(file, downloadDir) && user != "" && user != "root" {
 				now := uint(time.Now().UnixMilli())
 				if now - lastNotify > notifyDelay {
 					lastNotify = now
-					exec.Command(`notify-send`, `-i`, rootDir+`/assets/blue.png`, `-t`, `3`, `Started Scanning File`, file).Run()
+					if os.Geteuid() == 0 {
+						bash.Run([]string{`pkexec`, `--user`, user, `./notify.sh`, userDBUS, `assets/blue.png`, `Started Scanning File`, file}, rootDir, nil)
+					}else{
+						bash.Run([]string{`notify-send`, `-i`, `assets/blue.png`, `-t`, `3`, `Started Scanning File`, file}, rootDir, nil)
+					}
 				}
 			}
 
@@ -208,11 +247,15 @@ func main(){
 			if err != nil && !success {
 				fmt.Println(err)
 
-				if downloadDir != "" && strings.HasPrefix(file, downloadDir) {
+				if downloadDir != "" && strings.HasPrefix(file, downloadDir) && user != "" && user != "root" {
 					now := uint(time.Now().UnixMilli())
 					if now - lastNotify > notifyDelay {
 						lastNotify = now
-						exec.Command(`notify-send`, `-i`, rootDir+`/assets/blue.png`, `-t`, `3`, `Error: Failed To Scan File`, file).Run()
+						if os.Geteuid() == 0 {
+							bash.Run([]string{`pkexec`, `--user`, user, `./notify.sh`, userDBUS, `assets/blue.png`, `Error: Failed To Scan File`, file}, rootDir, nil)
+						}else{
+							bash.Run([]string{`notify-send`, `-i`, `assets/blue.png`, `-t`, `3`, `Error: Failed To Scan File`, file}, rootDir, nil)
+						}
 					}
 				}
 			}
