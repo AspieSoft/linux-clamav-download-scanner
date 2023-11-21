@@ -1,8 +1,12 @@
 #!/bin/bash
 
-if [ "$UID" != "0" ]; then
-  echo "Please run as root!"
-  exit 1
+if [ "$1" = "-h" -o "$1" = "-?" -o "$1" = "--help" ]; then
+  echo
+  echo 'Usage: avscan [filepath/directory]'
+  echo
+  echo 'Leave [filepath/directory] blank to scan current directory (i.e. $PWD)'
+  echo
+  exit
 fi
 
 local scanDir="$1"
@@ -10,4 +14,4 @@ if [ "$scanDir" = "" ]; then
   scanDir="$PWD"
 fi
 
-sudo nice -n 15 clamscan -r --bell --move="/VirusScan/quarantine" --exclude-dir="/VirusScan/quarantine" --exclude-dir="/home/$USER/.clamtk/viruses" --exclude-dir="smb4k" --exclude-dir="/run/user/$USER/gvfs" --exclude-dir="/home/$USER/.gvfs" --exclude-dir=".thunderbird" --exclude-dir=".mozilla-thunderbird" --exclude-dir=".evolution" --exclude-dir="Mail" --exclude-dir="kmail" --exclude-dir="^/sys" "$scanDir"
+nice -n 15 clamscan -r --bell --move="/VirusScan/quarantine" --exclude-dir="/VirusScan/quarantine" --exclude-dir="/home/*/.clamtk/viruses" --exclude-dir="smb4k" --exclude-dir="/run/user/*/gvfs" --exclude-dir="/home/*/.gvfs" --exclude-dir=".thunderbird" --exclude-dir=".mozilla-thunderbird" --exclude-dir=".evolution" --exclude-dir="Mail" --exclude-dir="kmail" --exclude-dir="^/sys" "$scanDir"
