@@ -8,11 +8,11 @@ if [ "$UID" != "0" ]; then
 fi
 
 # install dependencies
-if [ "$(which apt)" != "" ] &>/dev/null; then
+if [ "$(which apt 2>/dev/null)" != "" ] &>/dev/null; then
   source ./bin/deps/deps.apt.sh
-elif [ "$(which dnf)" != "" ] &>/dev/null; then
+elif [ "$(which dnf 2>/dev/null)" != "" ] &>/dev/null; then
   source ./bin/deps/deps.dnf.sh
-elif [ "$(which rpm-ostree)" != "" ] &>/dev/null; then
+elif [ "$(which rpm-ostree 2>/dev/null)" != "" ] &>/dev/null; then
   source ./bin/deps/deps.rpm-ostree.sh
 else
   echo "Warning: Package Manager Unsupported!"
