@@ -12,6 +12,8 @@ Currently, this module only uses the active users home directory, and does not t
 
 ## Installation
 
+> note: It is recommended you install the [go programing language](https://go.dev/) before installing this script, for improved compatibility.
+
 ```shell script
 git clone https://github.com/AspieSoft/linux-clamav-download-scanner.git
 sudo ./linux-clamav-download-scanner/install.sh
