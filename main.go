@@ -28,9 +28,23 @@ func main(){
 	var userDBUS string
 	if os.Geteuid() == 0 {
 		user = os.Getenv("SUDO_USER")
-		if user == "" {
-			user = "root"
+		if user == "" || user == "root" {
+			user = ""
+			if out, err := bash.Run([]string{`w`}, "", nil); err == nil {
+				regex.Comp(`(?m)^([\w_\-]+)\s+seat[0-9]+`).RepFunc(out, func(data func(int) []byte) []byte {
+					if user == "" {
+						user = string(data(1))
+					}
+					return nil
+				}, true)
+			}
+
+			if user == "" {
+				user = "root"
+			}
 		}
+
+		user = string(regex.Comp(`[^\w_\-]+`).RepStrLit([]byte(user), []byte{}))
 
 		if out, err := bash.Run([]string{`runuser`, `-l`, user, `-c`, `echo $UID`}, "", nil); err == nil && len(out) != 0 {
 			out = bytes.Trim(out, "\r\n ")
@@ -39,6 +53,8 @@ func main(){
 			}
 		}
 	}
+
+	user = string(regex.Comp(`[^\w_\-]+`).RepStrLit([]byte(user), []byte{}))
 
 	newFiles := map[string]uint{}
 	hasFiles := map[string]uint{}
@@ -61,7 +77,7 @@ func main(){
 			log.Fatal(errors.New("error: failed to get user home directory!"))
 		}
 
-		if out, err := bash.RunRaw(`getent passwd $SUDO_USER | cut -d: -f6`, "", nil); err == nil {
+		if out, err := bash.RunRaw(`getent passwd `+user+` | cut -d: -f6`, "", nil); err == nil {
 			homeDir = string(bytes.Trim(out, "\r\n "))
 		}else{
 			log.Fatal(errors.New("error: failed to get user home directory!"))
@@ -208,9 +224,9 @@ func main(){
 								if now - lastNotify > notifyDelay {
 									lastNotify = now
 									if os.Geteuid() == 0 {
-										bash.Run([]string{`pkexec`, `--user`, user, `./notify.sh`, userDBUS, `assets/green.png`, `File Is Safe`, file}, rootDir, nil)
+										bash.Run([]string{`pkexec`, `--user`, user, `./notify.sh`, userDBUS, rootDir+`/assets/green.png`, `File Is Safe`, file}, rootDir, nil)
 									}else{
-										bash.Run([]string{`notify-send`, `-i`, `assets/green.png`, `-t`, `3`, `File Is Safe`, file}, rootDir, nil)
+										bash.Run([]string{`notify-send`, `-i`, rootDir+`/assets/green.png`, `-t`, `3`, `File Is Safe`, file}, rootDir, nil)
 									}
 								}
 							}else if inf != 0 {
@@ -218,9 +234,9 @@ func main(){
 								if now - lastNotify > notifyDelay {
 									lastNotify = now
 									if os.Geteuid() == 0 {
-										bash.Run([]string{`pkexec`, `--user`, user, `./notify.sh`, userDBUS, `assets/red.png`, `Warning: File Has Been Moved To Quarantine`, file}, rootDir, nil)
+										bash.Run([]string{`pkexec`, `--user`, user, `./notify.sh`, userDBUS, rootDir+`/assets/red.png`, `Warning: File Has Been Moved To Quarantine`, file}, rootDir, nil)
 									}else{
-										bash.Run([]string{`notify-send`, `-i`, `assets/red.png`, `-t`, `3`, `Warning: File Has Been Moved To Quarantine`, file}, rootDir, nil)
+										bash.Run([]string{`notify-send`, `-i`, rootDir+`/assets/red.png`, `-t`, `3`, `Warning: File Has Been Moved To Quarantine`, file}, rootDir, nil)
 									}
 								}
 							}
@@ -236,9 +252,9 @@ func main(){
 				if now - lastNotify > notifyDelay {
 					lastNotify = now
 					if os.Geteuid() == 0 {
-						bash.Run([]string{`pkexec`, `--user`, user, `./notify.sh`, userDBUS, `assets/blue.png`, `Started Scanning File`, file}, rootDir, nil)
+						bash.Run([]string{`pkexec`, `--user`, user, `./notify.sh`, userDBUS, rootDir+`/assets/blue.png`, `Started Scanning File`, file}, rootDir, nil)
 					}else{
-						bash.Run([]string{`notify-send`, `-i`, `assets/blue.png`, `-t`, `3`, `Started Scanning File`, file}, rootDir, nil)
+						bash.Run([]string{`notify-send`, `-i`, rootDir+`/assets/blue.png`, `-t`, `3`, `Started Scanning File`, file}, rootDir, nil)
 					}
 				}
 			}
@@ -252,9 +268,9 @@ func main(){
 					if now - lastNotify > notifyDelay {
 						lastNotify = now
 						if os.Geteuid() == 0 {
-							bash.Run([]string{`pkexec`, `--user`, user, `./notify.sh`, userDBUS, `assets/blue.png`, `Error: Failed To Scan File`, file}, rootDir, nil)
+							bash.Run([]string{`pkexec`, `--user`, user, `./notify.sh`, userDBUS, rootDir+`/assets/blue.png`, `Error: Failed To Scan File`, file}, rootDir, nil)
 						}else{
-							bash.Run([]string{`notify-send`, `-i`, `assets/blue.png`, `-t`, `3`, `Error: Failed To Scan File`, file}, rootDir, nil)
+							bash.Run([]string{`notify-send`, `-i`, rootDir+`/assets/blue.png`, `-t`, `3`, `Error: Failed To Scan File`, file}, rootDir, nil)
 						}
 					}
 				}

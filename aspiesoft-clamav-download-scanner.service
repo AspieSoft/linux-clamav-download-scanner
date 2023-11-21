@@ -1,0 +1,11 @@
+[Unit]
+Description=AspieSoft ClamAV Download Scanner
+After=dbus.service
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /etc/aspiesoft-clamav-scanner/start.sh
+ExecStop=/bin/bash /etc/aspiesoft-clamav-scanner/stop.sh
+
+[Install]
+WantedBy=multi-user.target
