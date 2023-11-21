@@ -15,6 +15,7 @@ Currently, this module only uses the active users home directory, and does not t
 ```shell script
 git clone https://github.com/AspieSoft/linux-clamav-download-scanner.git
 sudo ./linux-clamav-download-scanner/install.sh
+rm -rf ./linux-clamav-download-scanner
 ```
 
 ## Config
