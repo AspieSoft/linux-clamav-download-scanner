@@ -10,6 +10,7 @@ wget https://github.com/AspieSoft/linux-clamav-download-scanner/archive/master.z
 unzip master.zip
 
 cp -rf linux-clamav-download-scanner-master/bin/* /etc/aspiesoft-clamav-scanner/
+rm -rf /etc/aspiesoft-clamav-scanner/deps
 
 cd "$dir"
 rm -rf ./tmp
