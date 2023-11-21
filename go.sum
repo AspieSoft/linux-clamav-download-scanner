@@ -1,13 +1,11 @@
 github.com/AspieSoft/go-regex-re2/v2 v2.2.0 h1:CK9+SYs7BYy+lV/JrmRbyF+SuTF+e+BIyjKGjKJQzLg=
 github.com/AspieSoft/go-regex-re2/v2 v2.2.0/go.mod h1:w+vA1zICvB4OQZGY8KdpyMwjwbFXdnZt9iQ7jRR+ycQ=
-github.com/AspieSoft/goutil/bash v0.0.0-20231116224510-5824f3e2dac1 h1:KWM13vsa+Zl72W1moqY7qSRO4Y6Ksl0GrrieT03YWXw=
-github.com/AspieSoft/goutil/bash v0.0.0-20231116224510-5824f3e2dac1/go.mod h1:QQ/cPsv0veQUgqYbt/+kD1N6ErzB+wwifZ3ldTj/UP4=
 github.com/AspieSoft/goutil/bash v0.0.0-20231120162123-776c8b89988d h1:qKQSTYpnU3y9p4DpxtGy5UWvDdd2IA4f8e4RywL0eU0=
 github.com/AspieSoft/goutil/bash v0.0.0-20231120162123-776c8b89988d/go.mod h1:QQ/cPsv0veQUgqYbt/+kD1N6ErzB+wwifZ3ldTj/UP4=
-github.com/AspieSoft/goutil/fs/v2 v2.0.0-20231116224510-5824f3e2dac1 h1:pJnHhzGghMOlso++eM6ZRmsPDSiLErcV5P/PFol8ViA=
-github.com/AspieSoft/goutil/fs/v2 v2.0.0-20231116224510-5824f3e2dac1/go.mod h1:WnYcTw1K3DSocmwk5QsHMH2bn0MOGA/e7KtpzWPe8iE=
 github.com/AspieSoft/goutil/fs/v2 v2.0.0-20231120162123-776c8b89988d h1:yVvk2ptykClaiXJq1y7+pRXfs1YmJ9GIrhppkFvsMAU=
 github.com/AspieSoft/goutil/fs/v2 v2.0.0-20231120162123-776c8b89988d/go.mod h1:WnYcTw1K3DSocmwk5QsHMH2bn0MOGA/e7KtpzWPe8iE=
+github.com/AspieSoft/goutil/v7 v7.5.2 h1:bI6sr1gR0kJVApWYFMUyZPK20YK363DohQrSEk7Sk/I=
+github.com/AspieSoft/goutil/v7 v7.5.2/go.mod h1:JGAt912jBwFrTXiazla1FTVqSI3zDetUKR5HJb9ND5I=
 github.com/fsnotify/fsnotify v1.7.0 h1:8JEhPFa5W2WU7YfeZzPNqzMP6Lwt7L2715Ggo0nosvA=
 github.com/fsnotify/fsnotify v1.7.0/go.mod h1:40Bi/Hjc2AVfZrqy+aj+yEI+/bRxZnMJyTJwOpGvigM=
 golang.org/x/sys v0.14.0 h1:Vz7Qs629MkJkGyHxUlRHizWJRG2j8fbQKjELVSNhy7Q=

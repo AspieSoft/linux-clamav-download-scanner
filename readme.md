@@ -14,21 +14,31 @@ Currently, this module only uses the active users home directory, and does not t
 
 ```shell script
 git clone https://github.com/AspieSoft/linux-clamav-download-scanner.git
+sudo ./linux-clamav-download-scanner/install.sh
 ```
 
-## Setup
+## Config
+
+add directories for to auto scan on downloads / new or modified files
 
 ```shell script
-# add this file to your startup script
-./linux-clamav-download-scanner
+nano ~/.aspiesoft-clamav-auto-scan
+# or
+nano ~/.clamav-auto-scan
 
-# optional: add additional directories to watch for downloads
-./linux-clamav-download-scanner MyDir1 MyDir2 MyDir...
+# list files without the /home/username/
+Downloads
+.config
+```
 
-# recommended to reduce memory usage
-# the loop will restore the process incase it crashes from the memory limit
-while true; do
-  GOMEMLIMIT="$((1024 * 1024 * 200))" ./linux-clamav-download-scanner
-  sleep 1
-done
+### To add default directories for all users
+
+```shell script
+nano /usr/share/config/aspiesoft-clamav-auto-scan
+# or
+nano /usr/share/config/clamav-auto-scan
+
+# list files without the /home/username/
+Downloads
+.config
 ```

@@ -16,6 +16,7 @@ import (
 	"github.com/AspieSoft/go-regex-re2/v2"
 	"github.com/AspieSoft/goutil/bash"
 	"github.com/AspieSoft/goutil/fs/v2"
+	"github.com/AspieSoft/goutil/v7"
 )
 
 func main(){
@@ -69,6 +70,8 @@ func main(){
 		"Pictures",
 		"Videos",
 		"Music",
+		"Public",
+		"Templates",
 	}
 
 	homeDir, err := os.UserHomeDir()
@@ -98,12 +101,27 @@ func main(){
 	}
 
 
-	// add browser extensions directories to scanDirList
+	// add user dirs to scanDirList
+	if buf, err := os.ReadFile(homeDir+"/.config/user-dirs.dirs"); err == nil {
+		regex.Comp(`(?m)^[\w_\-]+\s*=\s*(.*)$`).RepFunc(buf, func(data func(int) []byte) []byte {
+			dirPath := string(data(1)[len([]byte(homeDir))+1:])
+			if !goutil.Contains(scanDirList, dirPath) {
+				scanDirList = append(scanDirList, dirPath)
+			}
+			return []byte{}
+		}, true)
+	}
+
+
+	// add browser (and other) extensions directories to scanDirList
 	if out, err := bash.Run([]string{`find`, homeDir, `-type`, `d`, `-name`, `*xtensions`}, "", nil); err == nil {
 		for _, dir := range bytes.Split(out, []byte{'\n'}) {
 			dir = bytes.Trim(dir, "\r\n ")
 			if len(dir) != 0 {
-				scanDirList = append(scanDirList, string(dir[len([]byte(homeDir))+1:]))
+				dirPath := string(dir[len([]byte(homeDir))+1:])
+				if !goutil.Contains(scanDirList, dirPath) {
+					scanDirList = append(scanDirList, dirPath)
+				}
 			}
 		}
 	}
@@ -112,9 +130,55 @@ func main(){
 		for _, dir := range bytes.Split(out, []byte{'\n'}) {
 			dir = bytes.Trim(dir, "\r\n ")
 			if len(dir) != 0 {
-				scanDirList = append(scanDirList, string(dir[len([]byte(homeDir))+1:]))
+				dirPath := string(dir[len([]byte(homeDir))+1:])
+				if !goutil.Contains(scanDirList, dirPath) {
+					scanDirList = append(scanDirList, dirPath)
+				}
 			}
 		}
+	}
+
+
+	// add custom dirs to scanDirList
+	if buf, err := os.ReadFile(homeDir+"/.aspiesoft-clamav-auto-scan"); err == nil {
+		regex.Comp(`(?m)^[\w_\-]+\s*=\s*(.*)$`).RepFunc(buf, func(data func(int) []byte) []byte {
+			dirPath := string(data(1)[len([]byte(homeDir))+1:])
+			if !goutil.Contains(scanDirList, dirPath) {
+				scanDirList = append(scanDirList, dirPath)
+			}
+			return []byte{}
+		}, true)
+	}
+
+	if buf, err := os.ReadFile(homeDir+"/.clamav-auto-scan"); err == nil {
+		regex.Comp(`(?m)^[\w_\-]+\s*=\s*(.*)$`).RepFunc(buf, func(data func(int) []byte) []byte {
+			dirPath := string(data(1)[len([]byte(homeDir))+1:])
+			if !goutil.Contains(scanDirList, dirPath) {
+				scanDirList = append(scanDirList, dirPath)
+			}
+			return []byte{}
+		}, true)
+	}
+
+	// add custom dirs to scanDirList from root
+	if buf, err := os.ReadFile(homeDir+"/usr/share/config/aspiesoft-clamav-auto-scan"); err == nil {
+		regex.Comp(`(?m)^[\w_\-]+\s*=\s*(.*)$`).RepFunc(buf, func(data func(int) []byte) []byte {
+			dirPath := string(data(1)[len([]byte(homeDir))+1:])
+			if !goutil.Contains(scanDirList, dirPath) {
+				scanDirList = append(scanDirList, dirPath)
+			}
+			return []byte{}
+		}, true)
+	}
+
+	if buf, err := os.ReadFile(homeDir+"/usr/share/config/clamav-auto-scan"); err == nil {
+		regex.Comp(`(?m)^[\w_\-]+\s*=\s*(.*)$`).RepFunc(buf, func(data func(int) []byte) []byte {
+			dirPath := string(data(1)[len([]byte(homeDir))+1:])
+			if !goutil.Contains(scanDirList, dirPath) {
+				scanDirList = append(scanDirList, dirPath)
+			}
+			return []byte{}
+		}, true)
 	}
 
 

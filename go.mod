@@ -6,6 +6,7 @@ require (
 	github.com/AspieSoft/go-regex-re2/v2 v2.2.0
 	github.com/AspieSoft/goutil/bash v0.0.0-20231120162123-776c8b89988d
 	github.com/AspieSoft/goutil/fs/v2 v2.0.0-20231120162123-776c8b89988d
+	github.com/AspieSoft/goutil/v7 v7.5.2
 )
 
 require (
