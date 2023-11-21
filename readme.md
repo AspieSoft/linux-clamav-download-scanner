@@ -42,3 +42,9 @@ nano /usr/share/config/clamav-auto-scan
 Downloads
 .config
 ```
+
+## Uninstall
+
+```shell script
+sudo /etc/aspiesoft-clamav-scanner/uninstall.sh
+```
