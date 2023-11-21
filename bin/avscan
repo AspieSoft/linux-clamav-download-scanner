@@ -1,11 +1,25 @@
 #!/bin/bash
 
-if [ "$1" = "-h" -o "$1" = "-?" -o "$1" = "--help" ]; then
+for arg in $@; do
+  if [ "$arg" = "--help" -o "$arg" = "-h" -o "$arg" = "-?" ]; then
+    argHelp="1"
+  elif [ "$arg" = "--update" -o "$arg" = "-u" ]; then
+    argUpdate="1"
+  fi
+done
+
+if [ "$argHelp" = "1" ]; then
   echo
   echo 'Usage: avscan [filepath/directory]'
   echo
   echo 'Leave [filepath/directory] blank to scan current directory (i.e. $PWD)'
   echo
+  echo '[--help -h -?]    show this list'
+  echo '[--update -u]     update aspiesoft-clamav-scanner'
+  echo
+  exit
+elif [ "$argUpdate" = "1" ]; then
+  bash /etc/aspiesoft-clamav-scanner/update.sh
   exit
 fi
 
