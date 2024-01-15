@@ -1,4 +1,7 @@
 #!/bin/bash
 
-rpm-ostree -y install cronie inotify-tools
-rpm-ostree -y install clamav clamd clamav-update
+rpm-ostree install -y --allow-inactive cronie
+rpm-ostree install -y --allow-inactive inotify-tools
+rpm-ostree install -y --allow-inactive clamav
+rpm-ostree install -y --allow-inactive clamd
+rpm-ostree install -y --allow-inactive clamav-update
