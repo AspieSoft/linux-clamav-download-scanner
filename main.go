@@ -12,7 +12,7 @@ import (
 
 	"github.com/AspieSoft/go-regex-re2"
 	"github.com/AspieSoft/goutil/fs"
-	"github.com/alphadose/haxmap"
+	"github.com/AspieSoft/goutil/syncmap"
 )
 
 func main(){
@@ -22,8 +22,8 @@ func main(){
 	}
 	rootDir = string(regex.Comp(`[\\\/][\w_\-\.]+$`).RepStr([]byte(rootDir), []byte{}))
 
-	newFiles := haxmap.New[string, uint]()
-	hasFiles := haxmap.New[string, uint]()
+	newFiles := syncmap.NewMap[string, uint]()
+	hasFiles := syncmap.NewMap[string, uint]()
 	lastNotify := uint(0)
 	notifyDelay := uint(3000)
 
